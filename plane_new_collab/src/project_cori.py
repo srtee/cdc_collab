@@ -29,10 +29,6 @@ class Project(FlowProject):
 def run_cpmed(job):
     return job.isfile(conp_file)
 
-@Project.label
-def prepared(job):
-    return job.isfile(unwrapped_file)
-
 @Project.operation
 @Project.pre.isfile(lammps_init_file)
 @Project.post.isfile(restart_file)

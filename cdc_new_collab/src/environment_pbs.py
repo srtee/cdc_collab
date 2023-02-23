@@ -10,7 +10,7 @@ __all__ = ['CoriEnvironment']
  
 class RahmanEnvironment(flow.environment.DefaultPBSEnvironment):
     
-    template = 'rahman.vanderbilt.sh'
+    template = 'pbs.sh'
 
     @classmethod
     def add_args(cls, parser):
