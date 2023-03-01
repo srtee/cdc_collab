@@ -76,6 +76,8 @@ if "${if_wat} == 1" then "fix constrainH all shake 0.0001 20 0 m 1.007947 a 1"
 
 fix 1 sol nvt temp ${temperature} ${temperature} $(100.0*dt)
 
+timer timeout 23:00:00 every 100000
+
 variable cstep1 equal step
 
 if "${cstep1} < 100000" then &
@@ -96,4 +98,3 @@ if "${cstep3} >= 2000000" then &
     "restart 100000 file.restart" &
     "run 22000000 upto" &
     "write_restart restart.final"
-
