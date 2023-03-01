@@ -9,5 +9,6 @@ import flow
 __all__ = ['BunyaEnvironment']
  
 class BunyaEnvironment(flow.environment.DefaultSlurmEnvironment): 
-    hostname_pattern = r".*bunya.*"
+    hostname_pattern = r".*bun.*"
+    template = "bunya.sh"
     mpi_cmd = "srun"
