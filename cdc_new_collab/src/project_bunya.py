@@ -32,7 +32,7 @@ def run_cpmed(job):
 @Project.pre.isfile(lammps_init_file)
 @Project.post.isfile(restart_file)
 @flow.cmd
-def run_cpm(job):
+def start_cpm(job):
     return _lammps_str(job)
 
 def _lammps_str(job, 
@@ -52,7 +52,7 @@ def _lammps_str(job,
     
     print('if_restart is ', if_restart)
 
-    cmd ='srun --exclusive --ntasks=8 {exe} -in {input} '\
+    cmd ='srun --ntasks=8 {exe} -in {input} '\
         '-var voltage {voltage} '\
         '-var if_restart {if_restart} '\
         '-var if_wat {if_wat} '\
@@ -69,7 +69,7 @@ def rerun_cpmed(job):
 @Project.pre.isfile(restart_file)
 @Project.post.isfile(conp_file)
 @flow.cmd
-def rerun_cpm(job):
+def cont_cpm(job):
     return _lammps_str(job, if_restart=1)
 
 if __name__ == "__main__":

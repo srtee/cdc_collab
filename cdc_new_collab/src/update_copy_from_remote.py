@@ -4,11 +4,13 @@ import numpy as np
 project = signac.get_project()
 
 def copy_file(file_name, job_id, v, case, seed):
-    for job in project.find_jobs({'voltage': 0, 'case': case, 'seed': seed}):
-        rahman_job_id = job
-    cluster_name = 'linx6@rahman.vuse.vanderbilt.edu'
-    rahman_job = '/raid6/homes/linx6/project/self_project/CDC_corrected/cdc_new/workspace/{}'.format(rahman_job_id)
-    command_line = 'rsync -r {}:{}/{} workspace/{}/'.format(cluster_name, rahman_job, file_name, job_id)
+    #for job in project.find_jobs({'voltage': 0, 'case': case, 'seed': seed}):
+    #    rahman_job_id = job
+    #cluster_name = 'linx6@rahman.vuse.vanderbilt.edu'
+    #rahman_job = f'/raid6/homes/linx6/project/self_project/CDC_corrected/cdc_new/workspace/{rahman_job_id}'
+    #sourcedir = f'{cluster_name}:{rahman_job}'
+    sourcedir = f'lammps_input/{case}'
+    command_line = f'rsync -r {source_dir}/{file_name} workspace/{job_id}/'
     print(command_line)
     os.system(command_line)
     
@@ -27,5 +29,5 @@ for seed in seeds:
                 
                 copy_file('sample.data', job.id, v, case, seed)
                 # copy_file('system_lmp.gro', job.id, v, case, seed)
-                print('{} done {}'.format(i, job.id))
+                print(f'Copy job {i} done (to job ID {job.id})')
                 i += 1
