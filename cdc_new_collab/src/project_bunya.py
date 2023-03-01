@@ -1,8 +1,9 @@
 from flow import FlowProject
 import signac
 import flow
+import environment_for_bunya
 # import environment_for_rahman
-import environment_pbs
+# import DefaultSlurmEnvironment
 
 def workspace_command(cmd):
     """Simple command to always go to the workspace directory"""
@@ -19,7 +20,7 @@ sample_file = "sample.gro"
 unwrapped_file = 'sample_unwrapped.xtc'
 conp_file = "restart.final"
 lammps_init_file =  "sample.data"
-restart_file = 'file.restart.100000'
+restart_file = 'file.restart.*'
 
 class Project(FlowProject):
     pass
@@ -28,16 +29,15 @@ class Project(FlowProject):
 def run_cpmed(job):
     return job.isfile(conp_file)
 
-@Project.operation
 @Project.pre.isfile(lammps_init_file)
 @Project.post.isfile(restart_file)
-@flow.cmd
-def start_cpm(job):
+@Project.operation(directives={"nranks": 8, "walltime": 24}, cmd=True)
+def run_cpm(job):
     return _lammps_str(job)
 
 def _lammps_str(job, 
-                if_restart=0, 
-                if_wat =0, 
+                if_restart = 0, 
+                if_wat = 0, 
                 in_path = 'lammps_input/in.data_gcc', 
                 exe='/home/uqstee4/lammps-conp2/build/lmp_conp2'):
     
@@ -52,24 +52,21 @@ def _lammps_str(job,
     
     print('if_restart is ', if_restart)
 
-    cmd ='srun --ntasks=8 {exe} -in {input} '\
-        '-var voltage {voltage} '\
-        '-var if_restart {if_restart} '\
-        '-var if_wat {if_wat} '\
-        '-var temperature {temperature}'
-        
-    return workspace_command(cmd.format(case = case, voltage=voltage, if_restart=if_restart, if_wat= if_wat, temperature = temperature, exe = exe, input = lammps_input))
-
+    cmd = f'{exe} -in {lammps_input} '\
+          f'-var voltage {voltage} '\
+          f'-var if_restart {if_restart} '\
+          f'-var if_wat {if_wat} '\
+          f'-var temperature {temperature}'
+    return cmd
 
 @Project.label
 def rerun_cpmed(job):
     return job.isfile(conp_file)
 
-@Project.operation
 @Project.pre.isfile(restart_file)
 @Project.post.isfile(conp_file)
-@flow.cmd
-def cont_cpm(job):
+@Project.operation(cmd=True)
+def rerun_cpm(job):
     return _lammps_str(job, if_restart=1)
 
 if __name__ == "__main__":
