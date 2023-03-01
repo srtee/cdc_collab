@@ -39,12 +39,8 @@ def _lammps_str(job,
                 if_restart=0, 
                 if_wat =0, 
                 in_path = 'lammps_input/in.data_gcc', 
-                exe='/global/cfs/cdirs/m1046/Xiaobo/installed_software/lammps_jan_3/build_gcc/lmp_mpi'):
+                exe='/home/uqstee4/lammps-conp2/build/lmp_conp2'):
     
-    """Helper function, returns lammps command string for operation 
-        Note: need to use cori_start.sh or cori_repeat.sh according to demand
-    """
-    # exe = '/global/cfs/cdirs/m1046/Xiaobo/installed_software/lammps_May272021_CPM_cray/build_new/lmp_mpi'
     case = job.statepoint()["case"] 
     voltage = job.statepoint()["voltage"] 
     lammps_input = signac.get_project().fn(in_path)
@@ -56,7 +52,7 @@ def _lammps_str(job,
     
     print('if_restart is ', if_restart)
 
-    cmd ='srun --exclusive --ntasks=32 {exe} -in {input} '\
+    cmd ='srun --exclusive --ntasks=8 {exe} -in {input} '\
         '-var voltage {voltage} '\
         '-var if_restart {if_restart} '\
         '-var if_wat {if_wat} '\
