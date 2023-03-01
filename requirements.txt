@@ -1,0 +1,12 @@
+attrs==22.2.0
+cloudpickle==2.2.1
+deprecation==2.1.0
+filelock==3.9.0
+Jinja2==3.1.2
+jsonschema==4.17.3
+MarkupSafe==2.1.2
+packaging==23.0
+pyrsistent==0.19.3
+signac==1.8.0
+signac-flow==0.24.0
+tqdm==4.64.1
