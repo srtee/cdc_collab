@@ -56,7 +56,8 @@ def _lammps_str(job,
           f'-var voltage {voltage} '\
           f'-var if_restart {if_restart} '\
           f'-var if_wat {if_wat} '\
-          f'-var temperature {temperature}'
+          f'-var temperature {temperature} '\
+          f'-var workdir {job.path}'
     return cmd
 
 @Project.label
