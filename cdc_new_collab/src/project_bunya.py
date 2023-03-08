@@ -18,9 +18,9 @@ def workspace_command(cmd):
 init_file = "system.gro"
 sample_file = "sample.gro"
 unwrapped_file = 'sample_unwrapped.xtc'
-conp_file = "restart.final"
+conp_file = "file.restart.22000000"
 lammps_init_file =  "sample.data"
-restart_file = 'file.restart.*'
+restart_file = 'restart.1'
 
 class Project(FlowProject):
     pass
@@ -31,9 +31,15 @@ def run_cpmed(job):
 
 @Project.pre.isfile(lammps_init_file)
 @Project.post.isfile(restart_file)
-@Project.operation(directives={"nranks": 8, "walltime": 24}, cmd=True)
+@Project.operation(cmd=True)
 def run_cpm(job):
     return _lammps_str(job)
+
+@Project.pre.isfile(restart_file) # no post-condition because "run upto" auto-stops a run that has gone too long
+@Project.post.isfile('in_progress') # don't let rerun happen if run is in progress
+@Project.operation(cmd=True)
+def cont_cpm(job):
+    return _lammps_str(job,if_restart=1)
 
 def _lammps_str(job, 
                 if_restart = 0, 
@@ -52,7 +58,7 @@ def _lammps_str(job,
     
     print('if_restart is ', if_restart)
 
-    cmd = f'{exe} -in {lammps_input} '\
+    cmd = f'srun {exe} -in {lammps_input} -sf opt '\
           f'-var voltage {voltage} '\
           f'-var if_restart {if_restart} '\
           f'-var if_wat {if_wat} '\
@@ -63,12 +69,6 @@ def _lammps_str(job,
 @Project.label
 def rerun_cpmed(job):
     return job.isfile(conp_file)
-
-@Project.pre.isfile(restart_file)
-@Project.post.isfile(conp_file)
-@Project.operation(cmd=True)
-def rerun_cpm(job):
-    return _lammps_str(job, if_restart=1)
 
 if __name__ == "__main__":
     Project().main()

@@ -1,5 +1,8 @@
 *.out
 .bundles
 __pycache__
-conp*
+*lammpstrj
+*xtc
 log*
+*restart*
+in_progress

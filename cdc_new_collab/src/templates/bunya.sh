@@ -5,7 +5,9 @@
 #SBATCH --partition=general
 #SBATCH --distribution=block:block:block
 {% block tasks %}
-#SBATCH --ntasks={{ np_global }}
+#SBATCH --account=a_bernhardt
+#SBATCH --cpus-per-task=1
+
 module load cmake openmpi aocc fftw.mpi openblas
 {% endblock %}
 {% endblock %}

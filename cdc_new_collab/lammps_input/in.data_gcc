@@ -3,9 +3,6 @@ if "${if_restart} == 1" then "log log.2 append"
 if "${if_restart} == 0" then "log log.2"
 units               real   
 dimension           3   
-# processors          2 2 16
-# processors          2 2 8
-#processors          4 8 2
 processors          * * 2
 
 ### only two periodic boundaries
@@ -22,14 +19,14 @@ improper_style      cvff
 kspace_style        pppm/conp 1.0e-5
 kspace_modify       slab 3.0
 pair_modify         mix geometric  ## should be default anyway
-#kspace_style        pppm 1.0e-4
+
 ##atom definition
 
 if "${if_restart} == 0" then &
     "read_data         sample.data"
 
 if "${if_restart} == 1" then &
-    "read_restart         file.restart.*"
+    "read_restart         restart.*"
 
 special_bonds lj/coul 0.0 0.0 0.5 ## for opls lopes kpl
 
@@ -40,36 +37,41 @@ variable etype equal 1
 group cdc type 1
 group sol subtract all cdc
 
-group allatom union cdc sol
-
 group leftele molecule 3
 group rightele molecule 1
+
+group ele union leftele rightele
+group allatom union ele sol
 
 variable q atom q
 compute qleft leftele reduce sum v_q
 compute qright rightele reduce sum v_q
 compute tempsl sol temp
 
-
 ##outputs
 thermo              100
 neigh_modify every 2 delay 0 check yes  
 thermo_style custom step c_tempsl c_qleft c_qright # f_e
 thermo_modify flush yes
-#thermo_modify warn 5
 dump 6 allatom custom 1000 conp.lammpstrj id mol type x y z q
 dump_modify 6 sort id
 if "${if_restart} == 1" then &
     "dump_modify 6 append yes"
 
-dump 7 all xtc 1000 conp.xtc
+if "${if_restart} == 0" then "shell echo 0 > nrestart"
+variable nr file nrestart
+dump 7 all xtc 1000 conp_${nr}.xtc
 dump_modify 7 sort id
+shell echo $(v_nr+1) > nrestart # increment for next run
+
+dump 8 ele custom 1000 ele.lammpstrj id q
+dump_modify 8 sort id
+if "${if_restart} == 1" then &
+    "dump_modify 8 append yes"
 
 ##run_style           verlet
 timestep            2
 velocity cdc set 0.0 0.0 0.0
-# fix freezecdc cdc setforce 0.0 0.0 0.0
-#minimize 1.0e-4 1.0e-6 100 1000
 
 # fix constrainH all shake 0.0001 20 0 m 1.007947
 if "${if_wat} == 0" then "fix constrainH all shake 0.0001 20 0 m 1.007947"
@@ -77,25 +79,18 @@ if "${if_wat} == 1" then "fix constrainH all shake 0.0001 20 0 m 1.007947 a 1"
 
 fix 1 sol nvt temp ${temperature} ${temperature} $(100.0*dt)
 
-timer timeout 23:00:00 every 100000
+#timer timeout 286:00:00 every 100000
 
-variable cstep1 equal step
+variable v equal ${voltage}*(step>=2000000)
 
-if "${cstep1} < 100000" then &
-    "restart 100000 file.restart" &
-    "run 100000 upto"
+restart 10000 restart.1 restart.2
 
-variable cstep2 equal step
+shell touch in_progress
 
-if "(${cstep2} >= 100000) && (${cstep2} < 2000000)" then &
-    "fix cpm leftele conp 1 rightele 1.979 0 log_conp etypes 1 1 pppm" &
-    "restart 100000 file.restart" &
-    "run 2000000 upto" &
-    "unfix cpm"
+run 100000 upto
 
-variable cstep3 equal step
-if "${cstep3} >= 2000000" then &
-    "fix cpm leftele conp 1 rightele 1.979 ${voltage} log_conp etypes 1 1 pppm" &
-    "restart 100000 file.restart" &
-    "run 22000000 upto" &
-    "write_restart restart.final"
+fix cpm leftele conp 1 rightele 1.979 v_v log_conp etypes 1 1 pppm
+
+run 22000000 upto
+
+shell rm in_progress
