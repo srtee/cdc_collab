@@ -6,3 +6,5 @@ __pycache__
 log*
 *restart*
 in_progress
+*.h5
+*.npy
