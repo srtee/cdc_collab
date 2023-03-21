@@ -18,27 +18,37 @@ def workspace_command(cmd):
 init_file = "system.gro"
 sample_file = "sample.gro"
 unwrapped_file = 'sample_unwrapped.xtc'
-conp_file = "file.restart.22000000"
+
 lammps_init_file =  "sample.data"
-restart_file = 'restart.1'
+restart_file = 'in_progress' # tracks crashed runs worth recovering
+conp_file = 'nrestart' # present in both finished and crashed runs
 
 class Project(FlowProject):
     pass
 
 @Project.label
-def run_cpmed(job):
-    return job.isfile(conp_file)
+def ready_to_start(job):
+    return (job.isfile(lammps_init_file) and not job.isfile(restart_file) and not job.isfile(conp_file))
 
-@Project.pre.isfile(lammps_init_file)
-@Project.post.isfile(restart_file)
+@Project.label
+def ready_to_restart(job):
+    return (job.isfile(restart_file) and job.isfile(conp_file))
+
+@Project.label
+def completed_44ns(job):
+    return (job.isfile(conp_file) and not job.isfile(restart_file))
+
+
+@Project.pre(ready_to_start)
+@Project.post(ready_to_restart)
 @Project.operation(cmd=True)
-def run_cpm(job):
+def start_cpm(job):
     return _lammps_str(job)
 
-@Project.pre.isfile(restart_file) # no post-condition because "run upto" auto-stops a run that has gone too long
-@Project.post.isfile('in_progress') # don't let rerun happen if run is in progress
+@Project.pre(ready_to_restart)
+@Project.post(completed_44ns)
 @Project.operation(cmd=True)
-def cont_cpm(job):
+def restart_cpm(job):
     return _lammps_str(job,if_restart=1)
 
 def _lammps_str(job, 
@@ -65,10 +75,6 @@ def _lammps_str(job,
           f'-var temperature {temperature} '\
           f'-var workdir {job.path}'
     return cmd
-
-@Project.label
-def rerun_cpmed(job):
-    return job.isfile(conp_file)
 
 if __name__ == "__main__":
     Project().main()

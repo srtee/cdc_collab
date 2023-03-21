@@ -42,6 +42,8 @@ group rightele molecule 1
 
 group ele union leftele rightele
 group allatom union ele sol
+group cneut subtract cdc ele
+neigh_modify exclude group cdc cneut
 
 variable q atom q
 compute qleft leftele reduce sum v_q
@@ -53,10 +55,10 @@ thermo              100
 neigh_modify every 2 delay 0 check yes  
 thermo_style custom step c_tempsl c_qleft c_qright # f_e
 thermo_modify flush yes
-dump 6 allatom custom 1000 conp.lammpstrj id mol type x y z q
-dump_modify 6 sort id
-if "${if_restart} == 1" then &
-    "dump_modify 6 append yes"
+#dump 6 allatom custom 1000 conp.lammpstrj id mol type x y z q
+#dump_modify 6 sort id
+#if "${if_restart} == 1" then &
+#    "dump_modify 6 append yes"
 
 if "${if_restart} == 0" then "shell echo 0 > nrestart"
 variable nr file nrestart
@@ -83,7 +85,7 @@ fix 1 sol nvt temp ${temperature} ${temperature} $(100.0*dt)
 
 variable v equal ${voltage}*(step>=2000000)
 
-restart 10000 restart.1 restart.2
+#restart 10000 restart.1 restart.2
 
 shell touch in_progress
 
