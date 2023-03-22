@@ -8,3 +8,5 @@ log*
 in_progress
 *.h5
 *.npy
+gn-*
+plot-*
